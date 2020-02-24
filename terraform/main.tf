@@ -1,13 +1,20 @@
-resource "google_service_account" "create_access_service_account" {
-  account_id   = "create-access"
-  display_name = "Create Access Service Account"
+resource "google_billing_account_iam_binding" "binding" {
+  billing_account_id = "01A464-869E60-AC80F8"
+  role               = "roles/billing.viewer"
+
+  members = [
+    "user:mccurdyc22@gmail.com",
+  ]
 }
 
-resource "google_service_account_key" "create_access_key" {
-  service_account_id = google_service_account.create_access_service_account.name
+data "google_billing_account" "mccurdyc_dot_dev_billing_acct" {
+  billing_account = google_billing_account_iam_binding.binding.id
+  open            = true
 }
 
 resource "google_project" "mccurdyc_dot_dev" {
   name       = "mccurdyc-dot-dev"
   project_id = "daring-octane-268913"
+
+  billing_account = data.google_billing_account.mccurdyc_dot_dev_billing_acct.id
 }
