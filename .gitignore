@@ -1,4 +1,5 @@
 .terraform
 *.tfstate*
-*.tfvars*
 .well-known
+*.tfvars
+terraform/config.json
