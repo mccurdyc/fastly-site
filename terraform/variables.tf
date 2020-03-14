@@ -4,7 +4,7 @@ variable "root_domain" {
 }
 
 variable "sub_domain" {
-  type = string
+  type        = string
   description = "A subdomain (e.g., 'www')."
 
   default = "www"

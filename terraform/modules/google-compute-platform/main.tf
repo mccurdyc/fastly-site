@@ -26,6 +26,7 @@ resource "google_compute_global_forwarding_rule" "https" {
   port_range = "443"
 
   depends_on = [
+    google_project.default,
     google_compute_global_address.default,
     google_compute_target_https_proxy.default,
   ]
@@ -36,16 +37,21 @@ resource "google_compute_global_address" "default" {
   name         = "${google_project.default.name}-address"
   ip_version   = "IPV4"
   address_type = "EXTERNAL"
+
+  depends_on = [
+    google_project.default,
+  ]
 }
 
 resource "google_compute_target_https_proxy" "default" {
-  project = google_project.default.project_id
   name    = "${google_project.default.name}-https-lb"
+  project = google_project.default.project_id
 
   url_map          = google_compute_url_map.default.self_link
   ssl_certificates = [google_compute_managed_ssl_certificate.default.self_link]
 
   depends_on = [
+    google_project.default,
     google_compute_url_map.default,
     google_compute_managed_ssl_certificate.default,
   ]
@@ -55,6 +61,7 @@ resource "google_compute_managed_ssl_certificate" "default" {
   provider = google-beta
 
   name = "website-cert"
+  project = google_project.default.project_id
 
   managed {
     domains = ["${var.asset_domain_prefix}.${var.root_domain}."]
@@ -63,6 +70,7 @@ resource "google_compute_managed_ssl_certificate" "default" {
 
 resource "google_compute_url_map" "default" {
   name            = "url-map"
+  project = google_project.default.project_id
   default_service = google_compute_backend_bucket.default.self_link
 
   host_rule {
@@ -89,7 +97,7 @@ resource "google_compute_backend_bucket" "default" {
 resource "google_storage_bucket" "default" {
   name          = var.website_bucket_name
   project       = google_project.default.project_id
-  storage_class = "REGIONAL"
+  storage_class = "STANDARD"
   location      = "US"
 
   website {
@@ -117,11 +125,13 @@ resource "google_storage_default_object_access_control" "public_bucket_access" {
 
 resource "google_dns_managed_zone" "dev" {
   name     = "dev-zone"
+  project       = google_project.default.project_id
   dns_name = "dev.${var.root_domain}."
 }
 
 resource "google_dns_record_set" "a" {
   name         = "backend.${google_dns_managed_zone.dev.dns_name}"
+  project       = google_project.default.project_id
   managed_zone = google_dns_managed_zone.dev.name
   type         = "A"
   ttl          = 300
@@ -136,6 +146,7 @@ resource "google_dns_record_set" "a" {
 
 resource "google_dns_record_set" "cname" {
   name         = "${var.asset_domain_prefix}.${google_dns_managed_zone.dev.dns_name}"
+  project       = google_project.default.project_id
   managed_zone = google_dns_managed_zone.dev.name
   type         = "CNAME"
   ttl          = 300

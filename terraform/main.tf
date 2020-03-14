@@ -22,16 +22,16 @@ provider "fastly" {
 module "google-compute-platform" {
   source = "./modules/google-compute-platform"
 
-  project_name = var.gcp_project_name
-  billing_account_id = var.gcp_billing_account_id
-  user_email = var.gcp_user_email
+  project_name        = var.gcp_project_name
+  billing_account_id  = var.gcp_billing_account_id
+  user_email          = var.gcp_user_email
   website_bucket_name = var.gcp_website_bucket_name
-  root_domain = var.root_domain
+  root_domain         = var.root_domain
   asset_domain_prefix = var.asset_domain_prefix
 }
 
 module "fastly" {
-  source                        = "./modules/fastly"
+  source = "./modules/fastly"
 
   service_name                  = var.fastly_service_name
   service_domain                = "${var.sub_domain}.${var.root_domain}"
