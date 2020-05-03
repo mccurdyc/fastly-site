@@ -18,12 +18,12 @@ $ git clone --recurse-submodules git@github.com:mccurdyc/fastly-site.git
 
 + [`kolypto/j2cli`](https://github.com/kolypto/j2cli)
 ```bash
-$ pip install j2cli
+$ pip3 install j2cli
 ```
 
 ```bash
 $ gcloud auth application-default login
-$ pushd terraform && terraform init && popd
+$ (cd terraform && terraform init)
 ```
 
 Write the sensitive information to a config JSON file to be used as variables in
@@ -35,6 +35,7 @@ $ cat << EOF > terraform/config.json
   "gcp": {
     "email": "<your_gcp_account_email_here>",
     "billing_account_id": "<your_billing_account_id_here>"
+    "dns_txt_verify": "<your_dns_txt_record_to_prove_domain_ownership>"
   },
   "fastly": {
     "api_key": "<your_key_here>"
