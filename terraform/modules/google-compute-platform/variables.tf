@@ -3,6 +3,21 @@ variable "project_name" {
   description = "The Google Compute Platform project name."
 }
 
+variable "project_id" {
+  type        = string
+  description = "The Google Compute Platform project ID."
+}
+
+variable "fastly_tls_host" {
+  type        = string
+  description = "The Fastly host for TLS."
+}
+
+variable "dns_txt_verify" {
+  type        = string
+  description = "The TXT DNS record for verifying ownership of the domain."
+}
+
 variable "billing_account_id" {
   type        = string
   description = "The managing Google Compute Platform billing account ID."

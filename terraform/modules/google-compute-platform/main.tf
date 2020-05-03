@@ -4,26 +4,78 @@ terraform {
 }
 
 resource "google_project" "default" {
-  name            = var.project_name
-  project_id      = "${var.project_name}-website"
-  billing_account = google_billing_account_iam_member.binding.billing_account_id
+  name       = var.project_name
+  project_id = var.project_id
+
+  billing_account = var.billing_account_id
 }
 
-resource "google_billing_account_iam_member" "binding" {
-  billing_account_id = var.billing_account_id
-  role               = "roles/billing.admin"
-  member             = format("user:%s", var.user_email)
+resource "google_service_account" "manage" {
+  account_id   = "mccurdyc-owner"
+  display_name = "mccurdyc-owner"
+}
+
+resource "google_dns_managed_zone" "default" {
+  name        = "www-mccurdyc-dev-zone"
+  dns_name    = "${var.root_domain}."
+  description = "Managed by Terraform"
+  project     = var.project_id
+}
+
+resource "google_dns_record_set" "assets" {
+  name = "assets.${google_dns_managed_zone.default.dns_name}"
+  type = "A"
+  ttl  = 300
+
+  managed_zone = google_dns_managed_zone.default.name
+
+  depends_on = [
+    google_project.default,
+    google_compute_global_address.default,
+  ]
+
+  rrdatas = [google_compute_global_address.default.address]
+}
+
+resource "google_dns_record_set" "dns_proof" {
+  name = google_dns_managed_zone.default.dns_name
+  type = "TXT"
+  ttl  = 300
+
+  managed_zone = google_dns_managed_zone.default.name
+
+  depends_on = [
+    google_project.default,
+    google_compute_global_address.default,
+  ]
+
+  rrdatas = ["\"${var.dns_txt_verify}\""]
+}
+
+resource "google_dns_record_set" "fastly_cname" {
+  name = "www.${google_dns_managed_zone.default.dns_name}"
+  type = "CNAME"
+  ttl  = 300
+
+  managed_zone = google_dns_managed_zone.default.name
+
+  depends_on = [
+    google_project.default,
+    google_compute_global_address.default,
+  ]
+
+  rrdatas = ["${var.fastly_tls_host}."]
 }
 
 resource "google_compute_global_forwarding_rule" "https" {
   provider = google-beta
 
   project = google_project.default.project_id
-  name    = "${google_project.default.name}-https-rule"
+  name    = "mccurdyc-dot-dev-lb-frontend"
 
   ip_address = google_compute_global_address.default.address
   target     = google_compute_target_https_proxy.default.self_link
-  port_range = "443"
+  port_range = "443-443"
 
   depends_on = [
     google_project.default,
@@ -35,7 +87,6 @@ resource "google_compute_global_forwarding_rule" "https" {
 resource "google_compute_global_address" "default" {
   project      = google_project.default.project_id
   name         = "${google_project.default.name}-address"
-  ip_version   = "IPV4"
   address_type = "EXTERNAL"
 
   depends_on = [
@@ -44,7 +95,7 @@ resource "google_compute_global_address" "default" {
 }
 
 resource "google_compute_target_https_proxy" "default" {
-  name    = "${google_project.default.name}-https-lb"
+  name    = "mccurdyc-dot-dev-lb-target-proxy"
   project = google_project.default.project_id
 
   url_map          = google_compute_url_map.default.self_link
@@ -60,7 +111,7 @@ resource "google_compute_target_https_proxy" "default" {
 resource "google_compute_managed_ssl_certificate" "default" {
   provider = google-beta
 
-  name = "website-cert"
+  name    = "assets-mccurdyc-dot-dev-cert"
   project = google_project.default.project_id
 
   managed {
@@ -69,19 +120,9 @@ resource "google_compute_managed_ssl_certificate" "default" {
 }
 
 resource "google_compute_url_map" "default" {
-  name            = "url-map"
-  project = google_project.default.project_id
+  name            = "mccurdyc-dot-dev-lb"
+  project         = google_project.default.project_id
   default_service = google_compute_backend_bucket.default.self_link
-
-  host_rule {
-    hosts        = ["${var.asset_domain_prefix}.dev.${var.root_domain}"]
-    path_matcher = "allpaths"
-  }
-
-  path_matcher {
-    name            = "allpaths"
-    default_service = google_compute_backend_bucket.default.self_link
-  }
 
   depends_on = [
     google_compute_backend_bucket.default,
@@ -89,7 +130,7 @@ resource "google_compute_url_map" "default" {
 }
 
 resource "google_compute_backend_bucket" "default" {
-  name        = "website-backend-bucket"
+  name        = "mccurdyc-dot-dev-backend"
   project     = google_storage_bucket.default.project
   bucket_name = google_storage_bucket.default.name
 }
@@ -97,8 +138,8 @@ resource "google_compute_backend_bucket" "default" {
 resource "google_storage_bucket" "default" {
   name          = var.website_bucket_name
   project       = google_project.default.project_id
-  storage_class = "STANDARD"
-  location      = "US"
+  storage_class = "REGIONAL"
+  location      = "US-EAST1"
 
   website {
     main_page_suffix = "index.html"
@@ -120,40 +161,5 @@ resource "google_storage_default_object_access_control" "public_bucket_access" {
 
   depends_on = [
     google_storage_bucket.default,
-  ]
-}
-
-resource "google_dns_managed_zone" "dev" {
-  name     = "dev-zone"
-  project       = google_project.default.project_id
-  dns_name = "dev.${var.root_domain}."
-}
-
-resource "google_dns_record_set" "a" {
-  name         = "backend.${google_dns_managed_zone.dev.dns_name}"
-  project       = google_project.default.project_id
-  managed_zone = google_dns_managed_zone.dev.name
-  type         = "A"
-  ttl          = 300
-
-  rrdatas = [google_compute_global_forwarding_rule.https.ip_address]
-
-  depends_on = [
-    google_dns_managed_zone.dev,
-    google_compute_global_forwarding_rule.https,
-  ]
-}
-
-resource "google_dns_record_set" "cname" {
-  name         = "${var.asset_domain_prefix}.${google_dns_managed_zone.dev.dns_name}"
-  project       = google_project.default.project_id
-  managed_zone = google_dns_managed_zone.dev.name
-  type         = "CNAME"
-  ttl          = 300
-
-  rrdatas = ["dev.${var.root_domain}."]
-
-  depends_on = [
-    google_dns_managed_zone.dev,
   ]
 }
