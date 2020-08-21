@@ -1,26 +1,39 @@
 terraform {
-  # The modules used in this example have been updated with 0.12 syntax, which means the example is no longer
-  # compatible with any versions below 0.12.
-  required_version = ">= 0.12"
+  required_version = ">= 0.13"
+
   backend "gcs" {
     bucket = "www-mccurdyc-dev-tfstate"
+  }
+
+  required_providers {
+    fastly = {
+      source  = "terraform-providers/fastly"
+      version = "0.20.0"
+    }
+
+    google = {
+      source  = "hashicorp/google"
+      version = "3.35.0"
+    }
+
+    google-beta = {
+      source  = "hashicorp/google"
+      version = "3.35.0"
+    }
   }
 }
 
 provider "google" {
   credentials = file("account.json")
-  version     = "~> 3.9.0"
   project     = var.gcp_project_id
 }
 
 provider "google-beta" {
   credentials = file("account.json")
-  version     = "~> 3.11.0"
   project     = var.gcp_project_id
 }
 
 provider "fastly" {
-  version = "~> 0.12"
   api_key = var.fastly_api_key
 }
 
@@ -32,6 +45,7 @@ module "google-compute-platform" {
   billing_account_id  = var.gcp_billing_account_id
   user_email          = var.gcp_user_email
   website_bucket_name = var.gcp_website_bucket_name
+  logs_bucket_name    = var.gcp_logs_bucket_name
   root_domain         = var.root_domain
   asset_domain_prefix = var.asset_domain_prefix
   fastly_tls_host     = var.fastly_tls_host
