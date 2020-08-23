@@ -33,6 +33,11 @@ variable "website_bucket_name" {
   description = "The name of the Google Cloud Storage bucket. It must be the full domain, including the subdomain (e.g., www.mccurdyc.dev)."
 }
 
+variable "logs_bucket_name" {
+  type        = string
+  description = "The name of the Google Cloud Storage bucket for logs."
+}
+
 variable "root_domain" {
   type        = string
   description = "The root or Apex domain (e.g., mccurdyc.dev)"

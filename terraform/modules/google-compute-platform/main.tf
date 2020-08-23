@@ -1,8 +1,3 @@
-terraform {
-  # This module has been updated with 0.12 syntax, which means it is no longer compatible with any versions below 0.12.
-  required_version = ">= 0.12"
-}
-
 resource "google_project" "default" {
   name       = var.project_name
   project_id = var.project_id
@@ -50,6 +45,21 @@ resource "google_dns_record_set" "dns_proof" {
   ]
 
   rrdatas = ["\"${var.dns_txt_verify}\""]
+}
+
+resource "google_dns_record_set" "wasm_cname" {
+  name = "wasm.${google_dns_managed_zone.default.dns_name}"
+  type = "CNAME"
+  ttl  = 300
+
+  managed_zone = google_dns_managed_zone.default.name
+
+  depends_on = [
+    google_project.default,
+    google_compute_global_address.default,
+  ]
+
+  rrdatas = ["${var.fastly_tls_host}."]
 }
 
 resource "google_dns_record_set" "fastly_cname" {
@@ -150,7 +160,6 @@ resource "google_storage_bucket" "default" {
 
   depends_on = [
     google_project.default,
-    google_storage_bucket.default,
   ]
 }
 
@@ -162,4 +171,64 @@ resource "google_storage_default_object_access_control" "public_bucket_access" {
   depends_on = [
     google_storage_bucket.default,
   ]
+}
+
+resource "google_project_service" "apis" {
+  for_each = toset([
+    "containerregistry.googleapis.com",
+  ])
+
+  project  = var.project_id
+  service  = each.value
+
+  disable_dependent_services = true
+}
+
+resource "google_compute_firewall" "default" {
+  name    = "ssh"
+  network = google_compute_network.default-vpc.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+}
+
+resource "google_compute_network" "default-vpc" {
+  name = "mccurdyc-network"
+}
+
+resource "google_container_registry" "registry" {
+  project  = var.project_id
+  location = "US"
+
+  depends_on = [google_project_service.apis]
+}
+
+resource "google_compute_instance" "vm-1" {
+  name         = "vm-1"
+  machine_type = "n1-standard-1"
+  zone         = "us-west1-c"
+
+  boot_disk {
+    initialize_params {
+      image = "cos-cloud/cos-dev"
+      size  = 10
+    }
+  }
+
+  network_interface {
+    network = google_compute_network.default-vpc.id
+
+    access_config {
+      network_tier = "STANDARD"
+    }
+  }
+
+  metadata = {
+    user-data = templatefile("${path.module}/files/cloud-config.yaml.tmpl", {
+      gcp_project_id  = var.project_id
+      container_image = "foo:latest"
+    })
+  }
 }
