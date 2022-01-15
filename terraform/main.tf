@@ -24,13 +24,11 @@ terraform {
 }
 
 provider "google" {
-  credentials = file("account.json")
-  project     = var.gcp_project_id
+  project = var.gcp_project_id
 }
 
 provider "google-beta" {
-  credentials = file("account.json")
-  project     = var.gcp_project_id
+  project = var.gcp_project_id
 }
 
 provider "fastly" {
@@ -45,7 +43,6 @@ module "google-compute-platform" {
   billing_account_id  = var.gcp_billing_account_id
   user_email          = var.gcp_user_email
   website_bucket_name = var.gcp_website_bucket_name
-  logs_bucket_name    = var.gcp_logs_bucket_name
   root_domain         = var.root_domain
   asset_domain_prefix = var.asset_domain_prefix
   fastly_tls_host     = var.fastly_tls_host

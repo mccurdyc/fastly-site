@@ -178,57 +178,8 @@ resource "google_project_service" "apis" {
     "containerregistry.googleapis.com",
   ])
 
-  project  = var.project_id
-  service  = each.value
+  project = var.project_id
+  service = each.value
 
   disable_dependent_services = true
-}
-
-resource "google_compute_firewall" "default" {
-  name    = "ssh"
-  network = google_compute_network.default-vpc.name
-
-  allow {
-    protocol = "tcp"
-    ports    = ["22"]
-  }
-}
-
-resource "google_compute_network" "default-vpc" {
-  name = "mccurdyc-network"
-}
-
-resource "google_container_registry" "registry" {
-  project  = var.project_id
-  location = "US"
-
-  depends_on = [google_project_service.apis]
-}
-
-resource "google_compute_instance" "vm-1" {
-  name         = "vm-1"
-  machine_type = "n1-standard-1"
-  zone         = "us-west1-c"
-
-  boot_disk {
-    initialize_params {
-      image = "cos-cloud/cos-dev"
-      size  = 10
-    }
-  }
-
-  network_interface {
-    network = google_compute_network.default-vpc.id
-
-    access_config {
-      network_tier = "STANDARD"
-    }
-  }
-
-  metadata = {
-    user-data = templatefile("${path.module}/files/cloud-config.yaml.tmpl", {
-      gcp_project_id  = var.project_id
-      container_image = "foo:latest"
-    })
-  }
 }
