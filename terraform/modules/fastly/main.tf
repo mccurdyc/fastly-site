@@ -18,6 +18,7 @@ resource "fastly_service_v1" "website-service" {
     ssl_check_cert    = true
     ssl_cert_hostname = var.backend_origin_server_address
     ssl_sni_hostname  = var.backend_origin_server_address
+    shield            = "iad-va-us"
   }
 
   header {
