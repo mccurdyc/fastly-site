@@ -163,8 +163,27 @@ resource "google_storage_bucket" "default" {
   ]
 }
 
-resource "google_storage_default_object_access_control" "public_bucket_access" {
+resource "google_storage_default_object_access_control" "public_bucket_access_default" {
   bucket = google_storage_bucket.default.name
+  role   = "READER"
+  entity = "allUsers"
+
+  depends_on = [
+    google_storage_bucket.default,
+  ]
+}
+
+resource "google_storage_bucket" "images" {
+  name          = "images.mccurdyc.dev"
+  project       = google_project.default.project_id
+  storage_class = "REGIONAL"
+  location      = "US-EAST1"
+
+  force_destroy = true
+}
+
+resource "google_storage_default_object_access_control" "public_bucket_access_images" {
+  bucket = google_storage_bucket.images.name
   role   = "READER"
   entity = "allUsers"
 
