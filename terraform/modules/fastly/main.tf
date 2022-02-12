@@ -10,6 +10,24 @@ resource "fastly_service_v1" "website-service" {
     name = var.service_domain
   }
 
+  condition {
+    name      = "Fastly Image Optimizer Request Condition"
+    priority  = 10
+    statement = "req.url.ext ~ \"(?i)^(gif|png|jpe?g|webp)$\""
+    type      = "REQUEST"
+  }
+
+  header {
+    action            = "set"
+    destination       = "http.x-fastly-imageopto-api"
+    ignore_if_set     = false
+    name              = "Fastly Image Optimizer"
+    priority          = 1
+    request_condition = "Fastly Image Optimizer Request Condition"
+    source            = "\"fastly\""
+    type              = "request"
+  }
+
   backend {
     address           = var.backend_origin_server_address
     name              = var.backend_origin_server_name
