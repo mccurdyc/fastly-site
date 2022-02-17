@@ -53,32 +53,3 @@ variable "dns_txt_verify" {
   type        = string
   description = "The TXT DNS record for verifying ownership of the domain."
 }
-
-variable "fastly_api_key" {
-  type        = string
-  description = "The Fastly API key to use for resource creation."
-}
-
-variable "fastly_service_name" {
-  type        = string
-  description = "The name of the Fastly service."
-
-  default = "my-website"
-}
-
-variable "fastly_backend_origin_server_address" {
-  type        = string
-  description = "The backend origin server address to be used in a Fastly service."
-}
-
-variable "fastly_backend_origin_server_name" {
-  type        = string
-  description = "The backend origin server name to be used in a Fastly service."
-}
-
-variable "fastly_cache_ttl_seconds" {
-  type        = number
-  description = "The cache Time-to-Live in seconds."
-
-  default = 300
-}

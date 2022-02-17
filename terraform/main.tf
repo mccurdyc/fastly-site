@@ -32,7 +32,7 @@ provider "google-beta" {
 }
 
 provider "fastly" {
-  api_key = var.fastly_api_key
+  # FASTLY_API_KEY environment variable
 }
 
 module "google-compute-platform" {
