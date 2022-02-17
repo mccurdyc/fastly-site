@@ -8,11 +8,6 @@ variable "project_id" {
   description = "The Google Compute Platform project ID."
 }
 
-variable "fastly_tls_host" {
-  type        = string
-  description = "The Fastly host for TLS."
-}
-
 variable "dns_txt_verify" {
   type        = string
   description = "The TXT DNS record for verifying ownership of the domain."

@@ -47,21 +47,6 @@ resource "google_dns_record_set" "dns_proof" {
   rrdatas = ["\"${var.dns_txt_verify}\""]
 }
 
-resource "google_dns_record_set" "wasm_cname" {
-  name = "wasm.${google_dns_managed_zone.default.dns_name}"
-  type = "CNAME"
-  ttl  = 300
-
-  managed_zone = google_dns_managed_zone.default.name
-
-  depends_on = [
-    google_project.default,
-    google_compute_global_address.default,
-  ]
-
-  rrdatas = ["${var.fastly_tls_host}."]
-}
-
 resource "google_dns_record_set" "fastly_cname" {
   name = "www.${google_dns_managed_zone.default.dns_name}"
   type = "CNAME"
@@ -74,7 +59,22 @@ resource "google_dns_record_set" "fastly_cname" {
     google_compute_global_address.default,
   ]
 
-  rrdatas = ["${var.fastly_tls_host}."]
+  rrdatas = ["d.sni.global.fastly.net."]
+}
+
+resource "google_dns_record_set" "fastly_wasm_cname" {
+  name = "wasm.${google_dns_managed_zone.default.dns_name}"
+  type = "CNAME"
+  ttl  = 300
+
+  managed_zone = google_dns_managed_zone.default.name
+
+  depends_on = [
+    google_project.default,
+    google_compute_global_address.default,
+  ]
+
+  rrdatas = ["d.sni.global.fastly.net."]
 }
 
 resource "google_compute_global_forwarding_rule" "https" {

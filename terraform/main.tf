@@ -8,7 +8,6 @@ module "google-compute-platform" {
   website_bucket_name = var.gcp_website_bucket_name
   root_domain         = var.root_domain
   asset_domain_prefix = var.asset_domain_prefix
-  fastly_tls_host     = var.fastly_tls_host
   dns_txt_verify      = var.dns_txt_verify
 }
 
@@ -70,6 +69,28 @@ resource "fastly_service_vcl" "www_mccurdyc_dev" {
   cache_setting {
     name = "default"
     ttl  = 300
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_service_compute" "wasm_mccurdyc_dev" {
+  name = "wasm.mccurdyc.dev"
+
+  domain {
+    name = "wasm.mccurdyc.dev"
+  }
+
+  # Local backaned
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+    port    = 80
+  }
+
+  package {
+    filename         = "../wasm/pkg/wasm-mccurdyc-dev.tar.gz"
+    source_code_hash = filesha512("../wasm/pkg/wasm-mccurdyc-dev.tar.gz")
   }
 
   force_destroy = true
