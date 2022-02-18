@@ -2,4 +2,3 @@
 **/*.rs.bk
 /bin
 /pkg
-/src/config_private.rs
