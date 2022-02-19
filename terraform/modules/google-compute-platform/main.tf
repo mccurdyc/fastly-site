@@ -32,21 +32,6 @@ resource "google_dns_record_set" "assets" {
   rrdatas = [google_compute_global_address.default.address]
 }
 
-resource "google_dns_record_set" "dns_proof" {
-  name = google_dns_managed_zone.default.dns_name
-  type = "TXT"
-  ttl  = 300
-
-  managed_zone = google_dns_managed_zone.default.name
-
-  depends_on = [
-    google_project.default,
-    google_compute_global_address.default,
-  ]
-
-  rrdatas = ["\"${var.dns_txt_verify}\""]
-}
-
 resource "google_dns_record_set" "fastly_cname" {
   name = "www.${google_dns_managed_zone.default.dns_name}"
   type = "CNAME"
@@ -74,6 +59,7 @@ resource "google_dns_record_set" "fastly_wasm_cname" {
     google_compute_global_address.default,
   ]
 
+  # https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/
   rrdatas = ["d.sni.global.fastly.net."]
 }
 

@@ -8,7 +8,6 @@ module "google-compute-platform" {
   website_bucket_name = var.gcp_website_bucket_name
   root_domain         = var.root_domain
   asset_domain_prefix = var.asset_domain_prefix
-  dns_txt_verify      = var.dns_txt_verify
 }
 
 resource "fastly_service_vcl" "www_mccurdyc_dev" {
@@ -74,6 +73,16 @@ resource "fastly_service_vcl" "www_mccurdyc_dev" {
   force_destroy = true
 }
 
+resource "fastly_tls_subscription" "www_mccurdyc_dev" {
+  domains               = [for domain in fastly_service_vcl.www_mccurdyc_dev.domain : domain.name]
+  certificate_authority = "lets-encrypt"
+}
+
+resource "fastly_tls_activation" "www_mccurdyc_dev" {
+  certificate_id = fastly_tls_subscription.www_mccurdyc_dev.certificate_id
+  domain         = "www.mccurdyc.dev"
+}
+
 resource "fastly_service_compute" "wasm_mccurdyc_dev" {
   name = "wasm.mccurdyc.dev"
 
@@ -81,7 +90,7 @@ resource "fastly_service_compute" "wasm_mccurdyc_dev" {
     name = "wasm.mccurdyc.dev"
   }
 
-  # Local backaned
+  # Local backend - https://developer.fastly.com/learning/compute/#deploy-the-project-to-a-new-fastly-service
   backend {
     address = "127.0.0.1"
     name    = "localhost"
@@ -94,4 +103,14 @@ resource "fastly_service_compute" "wasm_mccurdyc_dev" {
   }
 
   force_destroy = true
+}
+
+resource "fastly_tls_subscription" "wasm_mccurdyc_dev" {
+  domains               = [for domain in fastly_service_compute.wasm_mccurdyc_dev.domain : domain.name]
+  certificate_authority = "lets-encrypt"
+}
+
+resource "fastly_tls_activation" "wasm_mccurdyc_dev" {
+  certificate_id = fastly_tls_subscription.wasm_mccurdyc_dev.certificate_id
+  domain         = "wasm.mccurdyc.dev"
 }

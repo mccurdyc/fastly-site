@@ -8,11 +8,6 @@ variable "project_id" {
   description = "The Google Compute Platform project ID."
 }
 
-variable "dns_txt_verify" {
-  type        = string
-  description = "The TXT DNS record for verifying ownership of the domain."
-}
-
 variable "billing_account_id" {
   type        = string
   description = "The managing Google Compute Platform billing account ID."

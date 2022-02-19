@@ -43,8 +43,3 @@ variable "gcp_website_bucket_name" {
   type        = string
   description = "The name of the Google Cloud Storage bucket. It must be the full domain, including the subdomain (e.g., www.mccurdyc.dev)."
 }
-
-variable "dns_txt_verify" {
-  type        = string
-  description = "The TXT DNS record for verifying ownership of the domain."
-}
