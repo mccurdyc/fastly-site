@@ -54,10 +54,16 @@ resource "google_dns_record_set" "fastly_wasm_cname" {
 
   managed_zone = google_dns_managed_zone.default.name
 
-  depends_on = [
-    google_project.default,
-    google_compute_global_address.default,
-  ]
+  # https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/
+  rrdatas = ["d.sni.global.fastly.net."]
+}
+
+resource "google_dns_record_set" "fastly_sandbox_cname" {
+  name = "sandbox.${google_dns_managed_zone.default.dns_name}"
+  type = "CNAME"
+  ttl  = 300
+
+  managed_zone = google_dns_managed_zone.default.name
 
   # https://developer.fastly.com/learning/concepts/routing-traffic-to-fastly/
   rrdatas = ["d.sni.global.fastly.net."]

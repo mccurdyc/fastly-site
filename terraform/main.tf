@@ -110,7 +110,41 @@ resource "fastly_tls_subscription" "wasm_mccurdyc_dev" {
   certificate_authority = "lets-encrypt"
 }
 
+# This will fail to create until the certificate is issued from the CA, so be patient.
 resource "fastly_tls_activation" "wasm_mccurdyc_dev" {
   certificate_id = fastly_tls_subscription.wasm_mccurdyc_dev.certificate_id
   domain         = "wasm.mccurdyc.dev"
+}
+
+resource "fastly_service_compute" "sandbox_mccurdyc_dev" {
+  name = "sandbox.mccurdyc.dev"
+
+  domain {
+    name = "sandbox.mccurdyc.dev"
+  }
+
+  # Local backend - https://developer.fastly.com/learning/compute/#deploy-the-project-to-a-new-fastly-service
+  backend {
+    address = "127.0.0.1"
+    name    = "localhost"
+    port    = 80
+  }
+
+  package {
+    filename         = "../sandbox/pkg/sandbox-mccurdyc-dev.tar.gz"
+    source_code_hash = filesha512("../sandbox/pkg/sandbox-mccurdyc-dev.tar.gz")
+  }
+
+  force_destroy = true
+}
+
+resource "fastly_tls_subscription" "sandbox_mccurdyc_dev" {
+  domains               = [for domain in fastly_service_compute.sandbox_mccurdyc_dev.domain : domain.name]
+  certificate_authority = "lets-encrypt"
+}
+
+# This will fail to create until the certificate is issued from the CA, so be patient.
+resource "fastly_tls_activation" "sandbox_mccurdyc_dev" {
+  certificate_id = fastly_tls_subscription.sandbox_mccurdyc_dev.certificate_id
+  domain         = "sandbox.mccurdyc.dev"
 }
