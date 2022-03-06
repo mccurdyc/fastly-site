@@ -178,10 +178,21 @@ resource "google_storage_default_object_access_control" "public_bucket_access_im
   bucket = google_storage_bucket.images.name
   role   = "READER"
   entity = "allUsers"
+}
 
-  depends_on = [
-    google_storage_bucket.default,
-  ]
+resource "google_storage_bucket" "random" {
+  name          = "random.mccurdyc.dev"
+  project       = google_project.default.project_id
+  storage_class = "REGIONAL"
+  location      = "US-EAST1"
+
+  force_destroy = true
+}
+
+resource "google_storage_default_object_access_control" "public_bucket_access_random" {
+  bucket = google_storage_bucket.random.name
+  role   = "READER"
+  entity = "allUsers"
 }
 
 resource "google_project_service" "apis" {

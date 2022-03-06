@@ -130,6 +130,23 @@ resource "fastly_service_compute" "sandbox_mccurdyc_dev" {
     port    = 80
   }
 
+  backend {
+    address               = "random.mccurdyc.dev.storage.googleapis.com"
+    auto_loadbalance      = false
+    between_bytes_timeout = 10000
+    connect_timeout       = 1000
+    error_threshold       = 0
+    first_byte_timeout    = 15000
+    max_conn              = 200
+    name                  = "random.mccurdyc.dev"
+    port                  = 443
+    ssl_cert_hostname     = "storage.googleapis.com"
+    ssl_check_cert        = true
+    ssl_sni_hostname      = "storage.googleapis.com"
+    use_ssl               = true
+    weight                = 100
+  }
+
   package {
     filename         = "../sandbox/pkg/sandbox-mccurdyc-dev.tar.gz"
     source_code_hash = filesha512("../sandbox/pkg/sandbox-mccurdyc-dev.tar.gz")
