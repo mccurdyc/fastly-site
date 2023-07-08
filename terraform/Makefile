@@ -1,4 +1,4 @@
-SHELL := /bin/bash -o pipefail
+SHELL := /usr/bin/env bash -o pipefail
 
 default: help
 
@@ -13,8 +13,8 @@ init: ## Runs terraform init.
 
 .PHONY: fetch-secrets
 fetch-secrets: ## Downloads Terraform variables from my secret store.
-	@op get document fastly-site-terraform.tfvars > terraform.tfvars
-	@op get document fastly-site-sa-creds.json > account.json
+	@op document get fastly-site-terraform.tfvars > terraform.tfvars
+	@op document get fastly-site-sa-creds.json > account.json
 
 help: ## Prints this help menu.
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

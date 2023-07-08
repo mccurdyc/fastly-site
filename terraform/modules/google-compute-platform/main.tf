@@ -32,6 +32,14 @@ resource "google_dns_record_set" "assets" {
   rrdatas = [google_compute_global_address.default.address]
 }
 
+resource "google_dns_record_set" "bsky_txt" {
+  name = "_atproto.${google_dns_managed_zone.default.dns_name}"
+  type = "TXT"
+  managed_zone = google_dns_managed_zone.default.name
+
+  rrdatas = ["did=did:plc:7vzwa7bq46pxqngpczavpnwy"]
+}
+
 resource "google_dns_record_set" "fastly_cname" {
   name = "www.${google_dns_managed_zone.default.dns_name}"
   type = "CNAME"
